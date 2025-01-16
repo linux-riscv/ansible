@@ -1,0 +1,118 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Deploy Linux RISC-V kernel patches daemon
+  hosts: all
+
+  vars_files:
+    - secrets.yml
+
+  tasks:
+    - name: Install apt packages
+      become: true
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+        pkg:
+          - git
+          - python3-dev
+          - python3-pip
+          - python3-venv
+
+    - name: Add the user 'pwsyncher'
+      become: true
+      ansible.builtin.user:
+        name: pwsyncher
+        shell: /bin/bash
+        create_home: true
+        state: present
+
+    - name: Create configuration directory
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.file:
+        path: "/home/pwsyncher/.kernel-patches"
+        state: directory
+        mode: "0700"
+
+    - name: Create KDP runtime directory
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.file:
+        path: "/home/pwsyncher/kpd"
+        state: directory
+        mode: "0755"
+
+    - name: Copy metric_logger.sh file
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.copy:
+        src: kpd_metric_logger.sh
+        dest: /home/pwsyncher/.kernel-patches/metric_logger.sh
+        mode: "775"
+
+    - name: Copy config.json file
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.copy:
+        src: kpd_config.json
+        dest: /home/pwsyncher/.kernel-patches/config.json
+        mode: "775"
+
+    - name: Copy KPD unit
+      become: true
+      ansible.builtin.copy:
+        src: pwsyncher.service
+        dest: /etc/systemd/system/pwsyncher.service
+        mode: "644"
+
+    - name: Force systemd to reread configs
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+    - name: Insert patchwork token
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.lineinfile:
+        path: /home/pwsyncher/.kernel-patches/config.json
+        regexp: '^(\s*)"api_token": "'
+        line: '\1"api_token": "{{ kpd_pw_api_token }}"'
+        backrefs: yes
+
+    - name: Insert github tokens
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.replace:
+        path: /home/pwsyncher/.kernel-patches/config.json
+        regexp: '^(\s*)"github_oauth_token": ".*$'
+        replace: '\1"github_oauth_token": "{{ kpd_github_token }}",'
+
+    - name: Clone KPD
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.git:
+        repo: "https://github.com/linux-riscv/kernel-patches-daemon.git"
+        dest: /home/pwsyncher/kernel-patches-daemon
+        version: fewer-builds
+
+    - name: Create python3 virtualenv
+      become: true
+      become_user: pwsyncher
+      ansible.builtin.pip:
+        name:
+          - pip
+          - wheel
+          - setuptools
+          - poetry
+        state: latest
+        virtualenv: "/home/pwsyncher/kernel-patches-daemon/.venv"
+        virtualenv_command: /usr/bin/python3 -m venv
+
+    - name: Run poetry install for KDP
+      become: true
+      become_user: pwsyncher
+      shell: |
+        source /home/pwsyncher/kernel-patches-daemon/.venv/bin/activate
+        poetry install
+      args:
+        chdir: "/home/pwsyncher/kernel-patches-daemon/"
+        executable: /bin/bash

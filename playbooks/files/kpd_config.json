@@ -1,0 +1,82 @@
+{
+  "version": 3,
+  "patchwork": {
+    "server": "patchwork.kernel.org",
+    "project": "linux-riscv",
+    "search_patterns": [
+      {
+        "archived": false,
+        "project": 377
+      }
+    ],
+    "lookback": 7,
+    "api_token": ""
+  },
+  "tag_to_branch_mapping": {
+      "--fixes" : [ "fixes" ],
+      "-fixes" : [ "fixes" ],
+      "fixes" : [ "fixes" ],
+      "next" : [ "for-next" ],
+      "-next" : [ "for-next" ],
+      "for-next" : [ "for-next" ],
+      "__DEFAULT__" : [ "for-next", "fixes" ]
+  },
+  "branches": {
+       "for-next": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git",
+            "upstream_branch": "for-next",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        },
+        "fixes": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git",
+            "upstream_branch": "fixes",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        },
+        "palmer-fixes": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/palmer/linux.git",
+            "upstream_branch": "fixes",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        },
+        "palmer-for-next": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/palmer/linux.git",
+            "upstream_branch": "for-next",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        },
+        "linus-master": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "upstream_branch": "master",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        },
+        "bpf": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf.git",
+            "upstream_branch": "master",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        },
+        "bpf-next": {
+            "github_oauth_token": "",
+            "repo": "https://github.com/linux-riscv/linux-riscv",
+            "upstream": "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git",
+            "upstream_branch": "master",
+            "ci_repo": "https://github.com/linux-riscv/github-ci.git",
+            "ci_branch": "main"
+        }
+   },
+  "base_directory": "/home/pwsyncher/kpd"

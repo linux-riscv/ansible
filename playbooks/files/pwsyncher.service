@@ -1,0 +1,18 @@
+# /etc/systemd/system/pwsyncher.service
+
+[Unit]
+Description=Kernel Patches Daemon
+After=network.target
+
+[Service]
+User=pwsyncher
+WorkingDirectory=/home/pwsyncher/kernel-patches-daemon
+ExecStart='/home/pwsyncher/kernel-patches-daemon/.venv/bin/poetry run python -m kernel_patches_daemon --label-color configs/labels.json'
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=5min
+Restart=on-success
+RestartSec=120s
+
+[Install]
+WantedBy=multi-user.target
