@@ -1,0 +1,84 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Deploy Github Ephemeral Runner
+  hosts: linux_kernel_ci
+
+  tasks:
+    - name: Install apt packages
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+        pkg:
+          - docker.io
+          - git
+          - tmux
+          - jq
+
+    - name: Add the user 'github'
+      become: true
+      ansible.builtin.user:
+        name: github
+        groups: docker,kvm
+        shell: /bin/bash
+        create_home: true
+        state: present
+
+    - name: Create directories needed by the CI
+      become: true
+      become_user: github
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "/home/github/ccache"
+        - "/home/github/ramdisk"
+
+    - name: Create actions-runner directory
+      become: true
+      become_user: github
+      ansible.builtin.file:
+        path: "/home/github/actions-runner"
+        state: directory
+        mode: "0755"
+
+    - name: Find the latest runner version
+      ansible.builtin.uri:
+        url: "https://api.github.com/repos/actions/runner/releases/latest"
+        headers:
+          Content-Type: "application/json"
+        method: GET
+        return_content: true
+        status_code: 200
+        body_format: json
+      check_mode: false
+      register: api_response
+
+    - name: Set runner_version variable
+      ansible.builtin.set_fact:
+        runner_version: "{{ api_response.json.tag_name | regex_replace('^v', '') }}"
+
+    - name: Unarchive runner package
+      become: true
+      become_user: github
+      ansible.builtin.unarchive:
+        src: "https://github.com/actions/runner/releases/download/v{{ runner_version }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+        dest: "/home/github/actions-runner"
+        remote_src: true
+        mode: "0755"
+
+    - name: Copy ghrunner.sh file
+      become: true
+      become_user: github
+      ansible.builtin.copy:
+        src: ghrunner.sh
+        dest: /home/github/actions-runner/
+        mode: "775"
+
+    - name: Clone Linus master as git reference
+      become: true
+      become_user: github
+      ansible.builtin.git:
+        repo: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        dest: /home/github/gitref
