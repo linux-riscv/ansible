@@ -1,0 +1,33 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Update and reboot
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+      
+    - name: Reboot the server if required
+      reboot:
+        msg: "Reboot initiated by Ansible due to package updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+
+    - name: Remove dependencies that are no longer required
+      apt:
+        autoremove: yes
